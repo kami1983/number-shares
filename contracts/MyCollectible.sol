@@ -1,4 +1,6 @@
-pragma solidity ^0.5.11;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.7.4;
 
 import "./ERC1155Tradable.sol";
 
@@ -12,11 +14,11 @@ contract MyCollectible is ERC1155Tradable {
     "MyCollectible",
     "MCB",
     _proxyRegistryAddress
-  ) public {
+  ) {
     _setBaseMetadataURI("https://creatures-api.opensea.io/api/creature/");
   }
 
-  function contractURI() public view returns (string memory) {
+  function contractURI() public pure returns (string memory) {
     return "https://creatures-api.opensea.io/contract/opensea-erc1155";
   }
 }

@@ -1,6 +1,8 @@
-pragma solidity ^0.5.12;
+// SPDX-License-Identifier: MIT
 
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+pragma solidity ^0.7.4;
+
+import "@openzeppelin/contracts/access/Ownable.sol";
 import 'multi-token-standard/contracts/tokens/ERC1155/ERC1155.sol';
 import 'multi-token-standard/contracts/tokens/ERC1155/ERC1155Metadata.sol';
 import 'multi-token-standard/contracts/tokens/ERC1155/ERC1155MintBurn.sol';
@@ -37,6 +39,12 @@ contract ERC1155Tradable is ERC1155, ERC1155MintBurn, ERC1155Metadata, Ownable {
     _;
   }
 
+  function supportsInterface(bytes4 _interfaceID) public override(ERC1155,ERC1155Metadata) virtual pure returns (bool) {
+        // 这里根据需要添加你的 supportsInterface 函数逻辑
+        //TODO::这里需要添加你的 supportsInterface 函数逻辑
+        return ERC1155.supportsInterface(_interfaceID) || ERC1155Metadata.supportsInterface(_interfaceID);
+    }
+  
   /**
    * @dev Require msg.sender to own more than 0 of the token id
    */
@@ -49,7 +57,7 @@ contract ERC1155Tradable is ERC1155, ERC1155MintBurn, ERC1155Metadata, Ownable {
     string memory _name,
     string memory _symbol,
     address _proxyRegistryAddress
-  ) public {
+  ) {
     name = _name;
     symbol = _symbol;
     proxyRegistryAddress = _proxyRegistryAddress;
@@ -57,7 +65,7 @@ contract ERC1155Tradable is ERC1155, ERC1155MintBurn, ERC1155Metadata, Ownable {
 
   function uri(
     uint256 _id
-  ) public view returns (string memory) {
+  ) public view virtual override returns (string memory) {
     require(_exists(_id), "ERC721Tradable#uri: NONEXISTENT_TOKEN");
     return Strings.strConcat(
       baseMetadataURI,
@@ -129,7 +137,7 @@ contract ERC1155Tradable is ERC1155, ERC1155MintBurn, ERC1155Metadata, Ownable {
     bytes memory _data
   ) public creatorOnly(_id) {
     _mint(_to, _id, _quantity, _data);
-    tokenSupply[_id] = tokenSupply[_id].add(_quantity);
+    tokenSupply[_id] = tokenSupply[_id]+_quantity;
   }
 
   /**
@@ -149,7 +157,7 @@ contract ERC1155Tradable is ERC1155, ERC1155MintBurn, ERC1155Metadata, Ownable {
       uint256 _id = _ids[i];
       require(creators[_id] == msg.sender, "ERC1155Tradable#batchMint: ONLY_CREATOR_ALLOWED");
       uint256 quantity = _quantities[i];
-      tokenSupply[_id] = tokenSupply[_id].add(quantity);
+      tokenSupply[_id] = tokenSupply[_id]+quantity;
     }
     _batchMint(_to, _ids, _quantities, _data);
   }
@@ -176,7 +184,7 @@ contract ERC1155Tradable is ERC1155, ERC1155MintBurn, ERC1155Metadata, Ownable {
   function isApprovedForAll(
     address _owner,
     address _operator
-  ) public view returns (bool isOperator) {
+  ) public view override returns (bool isOperator) {
     // Whitelist OpenSea proxy contract for easy trading.
     ProxyRegistry proxyRegistry = ProxyRegistry(proxyRegistryAddress);
     if (address(proxyRegistry.proxies(_owner)) == _operator) {
@@ -212,7 +220,7 @@ contract ERC1155Tradable is ERC1155, ERC1155MintBurn, ERC1155Metadata, Ownable {
     * @return uint256 for the next token ID
     */
   function _getNextTokenID() private view returns (uint256) {
-    return _currentTokenID.add(1);
+    return _currentTokenID+1;
   }
 
   /**

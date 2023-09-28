@@ -1,8 +1,10 @@
-pragma solidity ^0.5.11;
+// SPDX-License-Identifier: MIT
 
-import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
-import "openzeppelin-solidity/contracts/lifecycle/Pausable.sol";
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+pragma solidity ^0.7.4;
+
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./MyCollectible.sol";
 import "./MyFactory.sol";
 import "./ILootBox.sol";
@@ -62,7 +64,7 @@ contract MyLootBox is ILootBox, Ownable, Pausable, ReentrancyGuard, MyFactory {
   ) MyFactory(
     _proxyRegistryAddress,
     _nftAddress
-  ) public {
+  ) {
     // Example settings and probabilities
     // you can also call these after deploying
     uint16[NUM_CLASSES] memory guarantees;
@@ -73,6 +75,40 @@ contract MyLootBox is ILootBox, Ownable, Pausable, ReentrancyGuard, MyFactory {
     guarantees[2] = 2;
     guarantees[4] = 1;
     setOptionSettings(Option.Gold, 7, [7000, 2100, 400, 400, 50, 50], guarantees);
+  }
+
+  function balanceOf(address _owner, uint256 _optionId) public view override(ILootBox,MyFactory) returns (uint256) {
+    return this.balanceOf(_owner, _optionId);
+  }
+
+  function supportsFactoryInterface() external view override(ILootBox,MyFactory) returns (bool) {
+    return this.supportsFactoryInterface();
+  }
+
+  function safeTransferFrom(
+    address _from,
+    address _to,
+    uint256 _optionId,
+    uint256 _amount,
+    bytes calldata _data
+  ) external override(ILootBox,MyFactory) {
+    return this.safeTransferFrom(_from, _to, _optionId, _amount, _data);
+  }
+
+  function numOptions() external view override(ILootBox,MyFactory) returns (uint256) {
+    return this.numOptions();
+  }
+  
+  function isApprovedForAll(address _owner, address _operator) external view override(ILootBox,MyFactory) returns (bool){
+    return this.isApprovedForAll(_owner, _operator);
+  }
+
+  function factorySchemaName() external view override(ILootBox,MyFactory) returns (string memory){
+    return this.factorySchemaName();
+  }
+
+  function canMint(uint256 _optionId, uint256 _amount) external view override(ILootBox,MyFactory) returns (bool){
+    return this.canMint(_optionId, _amount);
   }
 
   //////
@@ -86,7 +122,7 @@ contract MyLootBox is ILootBox, Ownable, Pausable, ReentrancyGuard, MyFactory {
   function setClassForTokenId(
     uint256 _tokenId,
     uint256 _classId
-  ) public onlyOwner {
+  ) public override onlyOwner {
     _checkTokenApproval();
     _addTokenIdToClass(Class(_classId), _tokenId);
   }
@@ -110,7 +146,7 @@ contract MyLootBox is ILootBox, Ownable, Pausable, ReentrancyGuard, MyFactory {
    */
   function resetClass(
     uint256 _classId
-  ) public onlyOwner {
+  ) public override onlyOwner {
     delete classIsPreminted[_classId];
     delete classToTokenIds[_classId];
   }
@@ -187,7 +223,7 @@ contract MyLootBox is ILootBox, Ownable, Pausable, ReentrancyGuard, MyFactory {
     uint256 _optionId,
     address _toAddress,
     uint256 _amount
-  ) external onlyOwner {
+  ) external override onlyOwner {
     _mint(Option(_optionId), _toAddress, _amount, "");
   }
 
@@ -201,7 +237,7 @@ contract MyLootBox is ILootBox, Ownable, Pausable, ReentrancyGuard, MyFactory {
     address _toAddress,
     uint256 _amount,
     bytes memory /* _data */
-  ) internal whenNotPaused nonReentrant {
+  ) override internal whenNotPaused nonReentrant {
     // Load settings for this box option
     uint256 optionId = uint256(_option);
     OptionSettings memory settings = optionToSettings[optionId];
@@ -241,7 +277,7 @@ contract MyLootBox is ILootBox, Ownable, Pausable, ReentrancyGuard, MyFactory {
     emit LootBoxOpened(optionId, _toAddress, _amount, totalMinted);
   }
 
-  function withdraw() public onlyOwner {
+  function withdraw() public override onlyOwner {
     msg.sender.transfer(address(this).balance);
   }
 
@@ -249,15 +285,15 @@ contract MyLootBox is ILootBox, Ownable, Pausable, ReentrancyGuard, MyFactory {
   // Metadata methods
   /////
 
-  function name() external view returns (string memory) {
+  function name() external pure override(ILootBox, MyFactory) returns (string memory) {
     return "My Loot Box";
   }
 
-  function symbol() external view returns (string memory) {
+  function symbol() external pure override(ILootBox, MyFactory) returns (string memory) {
     return "MYLOOT";
   }
 
-  function uri(uint256 _optionId) external view returns (string memory) {
+  function uri(uint256 _optionId) external pure override(ILootBox, MyFactory) returns (string memory) {
     return Strings.strConcat(
       baseMetadataURI,
       "box/",

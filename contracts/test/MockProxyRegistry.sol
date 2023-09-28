@@ -1,7 +1,9 @@
-pragma solidity ^0.5.12;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.7.4;
 
 
-import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
 
 
 /**
@@ -16,7 +18,7 @@ contract MockProxyRegistry is Ownable {
   |__________________________________*/
 
   /**
-   * @notice Allow the owner to set a proxy for testing
+  
    * @param _address           The address that the proxy will act on behalf of
    * @param _proxyForAddress  The proxy that will act on behalf of the address
    */
